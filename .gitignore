@@ -1,0 +1,8 @@
+# Mac os
+.DS_Store
+
+# rpc config file
+rpc_config.py
+
+# python cache file
+__pycache__
