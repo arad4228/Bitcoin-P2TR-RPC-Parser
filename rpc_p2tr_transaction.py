@@ -24,6 +24,17 @@ try:
         if 'coinbase' in Json_transaction['vin'][0]:
             print("this transaction is coinbase transaction")
             continue
-        
+
+        is_P2TR = False
+        # if transaction not coinbase, collect all vin transaction.
+        for vin in Json_transaction['vin']:
+            # check witness_v1_taproot
+            utxo = vin['txid']
+            index = vin['vout']
+            utxo_transaction = rpc_connection.getrawtransaction(utxo, 2)
+            # if uxto witness is 'witness_v1_taproot
+            if utxo_transaction['vout'][index]['scriptPubKey']['type'] != "witness_v1_taproot":
+                continue
+            
 except JSONRPCException as e:
     print(f'RPC 호출 Error: {e}')
