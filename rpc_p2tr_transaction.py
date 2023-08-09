@@ -75,6 +75,9 @@ try:
             listTo.append(To)
             listURL.append(url)
 
+        # Next block
+        initialBlockNumber+=1
+
 except JSONRPCException as e:
     print(f'RPC 호출 Error: {e}')
     dataframe = getDataFrame(listTxid, listTypes, listFrom, listTo, listURL)
