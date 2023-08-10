@@ -32,7 +32,7 @@ try:
             is_P2TR = False
             is_TapTree = False
             # inner transaction from addresses
-            From = []
+            From = ""
 
             # if transaction not coinbase, collect all vin transaction.
             for vin in Json_transaction['vin']:
@@ -40,7 +40,7 @@ try:
                 utxo = vin['txid']
                 index = vin['vout']
                 utxo_transaction = rpc_connection.getrawtransaction(utxo, 2)
-                From.append(utxo_transaction['vout'][index]['scriptPubKey']['address'])
+                From += (utxo_transaction['vout'][index]['scriptPubKey']['address']+', ')
 
                 # if uxto witness is 'witness_v1_taproot
                 if utxo_transaction['vout'][index]['scriptPubKey']['type'] != "witness_v1_taproot":
@@ -54,29 +54,30 @@ try:
             
             # if transaction is not p2tr type
             if not is_P2TR:
-                # clear From list
-                From.clear()
                 continue
             
             # else
-            To = []
+            To = ""
             for vout in Json_transaction['vout']:
-                To.append(vout['scriptPubKey']['address'])
+                if "address" in vout['scriptPubKey']:
+                    To += ((vout['scriptPubKey']['address'])+', ')
+                else:
+                    To += ('NULL, ')
             
-            Types = []
+            Types = ""
             if is_TapTree:
-                Types.append("TapTree")
+                Types = 'TapTree'
             else:
-                Types.append("TapRoot")
+                Types = 'TapRoot'
             
+            From = From[:len(From)-2]
+            To = To[:len(To)-2]
+
             listTxid.append(transaction)
             listTypes.append(Types)
             listFrom.append(From)
             listTo.append(To)
             listURL.append(url)
-
-        # Next block
-        initialBlockNumber+=1
 
 except JSONRPCException as e:
     print(f'RPC 호출 Error: {e}')
