@@ -6,3 +6,6 @@ rpc_config.py
 
 # python cache file
 __pycache__
+
+# Crawling File
+Crawling*.csv
