@@ -94,6 +94,8 @@ try:
             listFrom.append(From)
             listTo.append(To)
             listURL.append(url)
+        
+        initialBlockNumber+=1
 
 except JSONRPCException as e:
     print(f'RPC 호출 Error: {e}')
