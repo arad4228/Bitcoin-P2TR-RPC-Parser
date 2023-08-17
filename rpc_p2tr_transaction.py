@@ -5,7 +5,8 @@ from rpc_pandas import *
 rpc_connection = AuthServiceProxy(f"http://{rpc_user}:{rpc_password}@{rpc_host}:{rpc_port}")
 
 # initialBlockNumber = 400000
-initialBlockNumber = 789024
+# initialBlockNumber = 789024
+initialBlockNumber = 790734
 
 listTxid = []
 listTypes = []
@@ -101,7 +102,14 @@ except JSONRPCException as e:
     print(f'RPC 호출 Error: {e}')
     dataframe = getDataFrame(listTxid, listTypes, listBRC20 ,listFrom, listTo, listURL)
     exportDataFrame(dataframe)
-except KeyboardInterrupt:
+
+except Exception as e:
+    print(f'Error 발생: {e}')
+    print("현재까지 진행한 모든 것을 저장합니다.")
+    dataframe = getDataFrame(listTxid, listTypes, listBRC20, listFrom, listTo, listURL)
+    exportDataFrame(dataframe)
+
+except:
     print("현재까지 진행한 모든 것을 저장합니다.")
     dataframe = getDataFrame(listTxid, listTypes, listBRC20, listFrom, listTo, listURL)
     exportDataFrame(dataframe)
