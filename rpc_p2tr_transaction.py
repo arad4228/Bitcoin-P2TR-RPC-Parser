@@ -1,18 +1,19 @@
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from rpc_config import *
 from rpc_pandas import *
+from multiprocessing import Pool
 
 rpc_connection = AuthServiceProxy(f"http://{rpc_user}:{rpc_password}@{rpc_host}:{rpc_port}")
 
-# initialBlockNumber = 400000
-# initialBlockNumber = 789024
-initialBlockNumber = 790734
+initialBlockNumber = 806200
 
+listBlockNumber = []
 listTxid = []
 listTypes = []
 listBRC20 = []
 listFrom = []
 listTo = []
+listCountofScripts = []
 listURL = []
 
 try:
@@ -41,6 +42,7 @@ try:
             Types = ""
             From = ""
             To = ""
+            nCountofScripts = 0
 
             # if transaction not coinbase, collect all vin transaction.
             for vin in Json_transaction['vin']:
@@ -51,19 +53,26 @@ try:
                 From += (utxo_transaction['vout'][index]['scriptPubKey']['address']+', ')
 
                 # if uxto witness is 'witness_v1_taproot
-                if utxo_transaction['vout'][index]['scriptPubKey']['type'] != "witness_v1_taproot":
+                if utxo_transaction['vout'][index]['scriptPubKey']['type'] == "witness_v1_taproot":
+                    is_P2TR = True
+                else:
                     continue
-
-                is_P2TR = True
 
                 # if not taproot spent transaction
                 if len(vin['txinwitness']) == 3:
                     is_TapTree = True
+                
+                    # check Script hash count
+                    cblock = vin['txinwitness'][2]
+                    nCblockSize = len(cblock)-2
+                    nCountofScripts = nCblockSize/64
+                    
                     # check BRC-20
                     script = vin['txinwitness'][1]
                     decoded_script = rpc_connection.decodescript(script)
                     if 'OP_IF' in decoded_script['asm'] and '6582895' in decoded_script['asm']:
                         is_BRC_20 = True
+                    
             
             # if transaction is not p2tr type
             if not is_P2TR:
@@ -77,7 +86,7 @@ try:
                     To += ('NULL, ')
             
             if is_TapTree:
-                Types = 'TapTree'
+                Types = 'TapScript'
             else:
                 Types = 'TapRoot'
             
@@ -89,27 +98,29 @@ try:
             From = From[:len(From)-2]
             To = To[:len(To)-2]
 
+            listBlockNumber.append(initialBlockNumber)
             listTxid.append(transaction)
             listTypes.append(Types)
             listBRC20.append(BRC20)
             listFrom.append(From)
             listTo.append(To)
+            listCountofScripts.append(nCountofScripts)
             listURL.append(url)
         
         initialBlockNumber+=1
 
 except JSONRPCException as e:
     print(f'RPC 호출 Error: {e}')
-    dataframe = getDataFrame(listTxid, listTypes, listBRC20 ,listFrom, listTo, listURL)
-    exportDataFrame(dataframe)
+    dataframe = getDataFrame(listBlockNumber, listTxid, listTypes, listBRC20 ,listFrom, listTo, listCountofScripts, listURL)
+    exportDataFrame(dataframe, initialBlockNumber)
 
 except Exception as e:
     print(f'Error 발생: {e}')
     print("현재까지 진행한 모든 것을 저장합니다.")
-    dataframe = getDataFrame(listTxid, listTypes, listBRC20, listFrom, listTo, listURL)
-    exportDataFrame(dataframe)
+    dataframe = getDataFrame(listBlockNumber, listTxid, listTypes, listBRC20 ,listFrom, listTo, listCountofScripts, listURL)
+    exportDataFrame(dataframe, initialBlockNumber)
 
 except:
     print("현재까지 진행한 모든 것을 저장합니다.")
-    dataframe = getDataFrame(listTxid, listTypes, listBRC20, listFrom, listTo, listURL)
-    exportDataFrame(dataframe)
+    dataframe = getDataFrame(listBlockNumber, listTxid, listTypes, listBRC20 ,listFrom, listTo, listCountofScripts, listURL)
+    exportDataFrame(dataframe, initialBlockNumber)
